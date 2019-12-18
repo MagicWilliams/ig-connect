@@ -9,7 +9,6 @@ const getUrlVars = url => {
 }
 
 export default (req, res) => {
-  console.log(req);
   let code = getUrlVars(req.url)["code"];
   let payload = {
     client_id: '573012866846964',
@@ -18,5 +17,12 @@ export default (req, res) => {
     redirect_uri: 'https://4f1a2d73.ngrok.io/auth',
     code: code
   };
+
+  axios.post(`https://api.instagram.com/oauth/access_token`, payload).then(res => {
+    console.log(res);
+  })
+  .catch(function (error) {
+    console.log('error');
+  });
   console.log(code, payload);
 }
