@@ -1,6 +1,5 @@
 import React from 'react'
 import Head from 'next/head'
-import Nav from '../components/nav';
 import { withRouter } from 'next/router'
 
 const checkForCode = url => {
@@ -10,27 +9,18 @@ const checkForCode = url => {
     }
 }
 
-const CatchAll = props => {
+const UserPage = props => {
   const { router } = props;
-  const path = props.router.asPath;
-  let payload = {
-    client_id: '573012866846964',
-    client_secret: process.env.APP_SECRET,
-    grant_type: 'authorization_code',
-    redirect_uri: 'https://ig-connect.now.sh/auth',
-    code: 'code'
-  };
-
-
+  const username = props.router.query.user;
   return (
     <div>
       <Head>
-        <title> Error </title>
+        <title> Welcome to School University </title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <div className="body">
-        <h1> Error Page </h1>
+        <h1> Hello, {username} </h1>
       </div>
 
       <style jsx>{`
@@ -40,4 +30,4 @@ const CatchAll = props => {
   );
 }
 
-export default withRouter(CatchAll);
+export default withRouter(UserPage);
