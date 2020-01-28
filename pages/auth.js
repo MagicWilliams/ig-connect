@@ -17,6 +17,8 @@ const getUrlVars = url => {
 
 class Auth extends React.Component {
   async componentDidMount() {
+
+
     const { router } = this.props;
     const path = this.props.router.asPath;
     const fullCode = getUrlVars(path)['code'];
@@ -37,6 +39,7 @@ class Auth extends React.Component {
         await fetch(url, {
           method: 'GET'
         }).then(async res => {
+          console.log(res);
           await res.json().then((res) => {
             window.location.href = '/u/' + res.username;
           });

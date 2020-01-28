@@ -9,27 +9,7 @@ const login = () => {
   window.location.href = 'https://api.instagram.com/oauth/authorize?app_id=573012866846964&redirect_uri=https://ig-connect.now.sh/auth&scope=user_profile&response_type=code';
 }
 
-Home.getInitialProps = async function() {
-  let dailyQuestions;
-
-  const client = require('contentful').createClient({
-    space: process.env.CONTENTFUL_SPACE_ID,
-    accessToken: process.env.CONTENTFUL_API_TOKEN
-  });
-
-  await client.getEntries({
-    content_type: 'dailyQuestions',
-  }).then((res) => {
-    dailyQuestions = res
-  });
-
-  return {
-    dailyQuestions
-  }
-}
-
 function Home(props) {
-  console.log(props);
   return (
     <div>
       <Head>

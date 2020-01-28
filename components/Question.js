@@ -1,53 +1,70 @@
 import React, { useState } from 'react';
 import { Sizing, Colors } from '../style-vars';
+import { postAnswer } from '../utils';
 
 const Question = props => {
   const [ showChoices, setShowChoices ] = useState(false);
-  const [ answerSelected, setAnswerSelected ] = useState(false);
+  const [ selection, setSelection ] = useState('');
+  const answerSelected = selection !== '';
+  const { answerOptions, username } = props;
+  const { topic, lesson, questionText } = props.currQ;
+  const color = props.getCategoryColor(topic);
+  const letterOptions = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  const btnText = !showChoices ? 'Answer' : showChoices && !answerSelected ? 'Select An Answer' : 'Submit';
+
   const handleClick = (showChoices, answerSelected) => {
       if (!showChoices) {
         setShowChoices(true);
       } else {
-        console.log('submitting answer');
+        handleSubmit();
       }
   }
-  const btnText = !showChoices ? 'Answer' : showChoices && !answerSelected ? 'Select An Answer' : 'Submit';
+
+  const handleSubmit = () => {
+    const selectionIndex = letterOptions.indexOf(selection);
+    const answerData = answerOptions[selectionIndex];
+    postAnswer({answerData: {...answerData}, username});
+  }
+
+  const getLetterOption = index => letterOptions[index];
+
   return (
     <div className='Question'>
       { !showChoices && (
-        <h1 className='question-text'> What 1920 artwork is featured in the lesson video? </h1>
+        <h1 className='question-text'> {questionText} </h1>
       )}
+
       { showChoices && (
         <div>
-          <div className='choices'>
-            <div className='choice'>
-              <div className='letter'> A </div>
-              <div className='option'> Option 1 </div>
-            </div>
-            <div className='choice'>
-              <div className='letter'> B </div>
-              <div className='option'> Option 2 </div>
-            </div>
-            <div className='choice'>
-              <div className='letter'> C </div>
-              <div className='option'> Option 3 </div>
-            </div>
-            <div className='choice'>
-              <div className='letter'> D </div>
-              <div className='option'> Option 4 </div>
-            </div>
+          <div className='answerOptions'>
+            { answerOptions.map((answer, i) => {
+              return (
+                <div className='choice'>
+                  <div className='letter'> {getLetterOption(i)} </div>
+                  <div className='option'> {answer.text} </div>
+                </div>
+              )
+            })}
           </div>
-          <div className='select-choice'>
-            <div className='individual-selection'> A </div>
-            <div className='individual-selection'> B </div>
-            <div className='individual-selection'> C </div>
-            <div className='individual-selection'> D </div>
+          <div className='optionSelection'>
+            { answerOptions.map((answer, i) => {
+              const highlightStyling = {
+                background: selection === getLetterOption(i) ? color : 'white',
+                color: selection === getLetterOption(i) ? 'white' : 'black',
+              }
+              return (
+                <div style={highlightStyling} onClick={() => setSelection(getLetterOption(i))}className='individual-selection'>
+                  {getLetterOption(i)}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
+
       <button className='grant' onClick={() => handleClick(showChoices, answerSelected)}> {btnText} </button>
       <p className='timer'> Time Remaining: 00:22:51 </p>
-      <p className='id'> S@: {props.username} </p>
+      <p className='id'> S@: {username} </p>
 
       <style jsx> {`
         .question-text {
@@ -60,7 +77,7 @@ const Question = props => {
         .grant {
           width: 100%;
           padding: ${Sizing.md};
-          background: ${Colors.blue};
+          background: ${color};
           color: white;
           font-size: 16px;
           margin: ${Sizing.xl} 0px;
@@ -73,8 +90,8 @@ const Question = props => {
           text-align: center;
         }
 
-        .choices {
-          border: 1px solid ${Colors.blue};
+        .answerOptions {
+          border: 1px solid ${color};
           width: 100%;
         }
 
@@ -86,7 +103,7 @@ const Question = props => {
 
         .letter, .option {
           padding: 10px;
-          border: 1px solid ${Colors.blue};
+          border: 1px solid ${color};
           display: flex;
           justify-content: center;
           align-items: center;
@@ -101,7 +118,7 @@ const Question = props => {
           justify-content: flex-start;
         }
 
-        .select-choice {
+        .optionSelection {
           width: 100%;
           display: flex;
           align-items: center;
@@ -109,9 +126,9 @@ const Question = props => {
           margin-top: ${Sizing.lg};
         }
 
-        .select-choice .individual-selection {
+        .optionSelection .individual-selection {
           padding: 10px 15px;
-          border: 1px solid ${props.color};
+          border: 1px solid ${color};
           border-radius: 100%;
         }
       `} </style>

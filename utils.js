@@ -41,6 +41,16 @@ export async function getScoreData(username) {
   return data;
 }
 
+export async function postAnswer(answerData) {
+  var database = firebase.database();
+  const formattedUser = answerData.username.replace(".", "_");
+  var userRef = database.ref('/users/' + formattedUser);
+  let newPostKey = userRef.child('answers').push().key;
+  var updates = {};
+  updates['/answers/' + newPostKey] = answerData;
+  return userRef.update(updates);
+}
+
 export async function postData(url = '', data = {}) {
   // Default options are marked with *
   const response = await fetch(url, {

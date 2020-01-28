@@ -21,29 +21,51 @@ UserPage.getInitialProps = async function(ctx) {
   });
 
   let dailyQuestions;
-  const scoreData = await getScoreData(ctx.query.user);
-  await client.getEntries({ content_type: 'dailyQuestions' }).then((res) => {
+  let scoreData;
+  let allAnswers = [];
+
+  await getScoreData(ctx.query.user).then((res) => {
+    scoreData = res;
+  });
+  await client.getEntries({ content_type: 'dailyQuestions' }).then(async res => {
     dailyQuestions = [...res.items];
+
+    for (var a = 0; a < dailyQuestions.length; a++) {
+      for (var field in dailyQuestions[a].fields) {
+        if (field !== 'day') {
+          const { answerOptions } = dailyQuestions[a].fields[field].fields;
+          for (var option in answerOptions) {
+            const { id } = answerOptions[option].sys;
+            await client.getEntry(id)
+            .then(entry => {
+              allAnswers.push(entry.fields)
+            });
+          }
+        }
+      };
+    }
   });
 
-  return { scoreData, dailyQuestions };
+  return { scoreData, dailyQuestions, allAnswers };
 }
 
 function UserPage(props) {
-  const { router } = props;
+  const { router, allAnswers, scoreData } = props;
   const username = props.router.query.user;
-  const [lesson, setLesson] = useState('--');
-  const [topic, setTopic] = useState('--');
-  const [currQ, setCurrQ] = useState({});
-  const setQuestion = (lesson, topic) => {
-    let filteredQs = props.dailyQuestions.filter(q => q.fields.lesson === lesson && q.fields.topic === topic);
-
-    setLesson(lesson);
-    setTopic(topic);
-    setCurrQ(filteredQs[0]);
-    console.log(props.dailyQuestions);
-
+  const initState = {
+    day: 2,
+    lesson: '--',
+    topic: '--',
+    questionText: '',
   }
+  const [currQ, setCurrQ] = useState(initState);
+  const reload = () => window.location.reload();
+  const getAnswerOptions = (allAnswers, day, lesson) => {
+    return allAnswers.filter(answer => {
+      return answer.day === day && answer.lessonNumberIndex == lesson;
+    })
+  }
+  const answerOptions = getAnswerOptions(allAnswers, currQ.day, currQ.lesson);
 
   return (
     <div>
@@ -52,18 +74,18 @@ function UserPage(props) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className='header'>
-        <img src='/img/logo-horizontal.png' alt='School University' />
+        <img onClick={reload} src='/img/logo-horizontal.png' alt='School University' />
         <h5> InstaSCAN&trade; </h5>
       </div>
 
-      <StatusBar day='02' lesson={lesson} topic={topic} color={getCategoryColor(topic)} />
+      <StatusBar day='02' lesson={currQ.lesson} topic={currQ.topic} color={getCategoryColor(currQ.topic)} />
 
       <div className="body">
-      { lesson != '--' && (
-        <Question username={username} day='02' lesson={lesson} topic={topic} color={getCategoryColor(topic)} />
+      { currQ.lesson != '--' && (
+        <Question currQ={currQ} username={username} getCategoryColor={getCategoryColor} answerOptions={answerOptions} />
       )}
-      { lesson === '--' && (
-        <ExamProgress setQuestion={setQuestion} dailyQuestions={props.dailyQuestions} />
+      { currQ.lesson === '--' && (
+        <ExamProgress setQuestion={setCurrQ} dailyQuestions={props.dailyQuestions[0].fields} />
       )}
       </div>
 
@@ -84,7 +106,7 @@ function UserPage(props) {
 
         .header h5 {
           font-weight: bold;
-          color: ${getCategoryColor(topic)};
+          color: ${getCategoryColor(currQ.topic)};
           font-family: 'Arial';
         }
       `}</style>

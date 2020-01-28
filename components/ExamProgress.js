@@ -2,17 +2,31 @@ import React from 'react';
 import { getCategoryColor } from '../utils';
 
 const ExamProgress = props => {
+  console.log('Start');
+
+  const getQs = questions => {
+    let allQs = [];
+    for (var field in questions) {
+      if (questions[field].fields) {
+        allQs.push(questions[field]);
+      }
+    }
+    return allQs;
+  }
+
+  const allQuestions = getQs(props.dailyQuestions);
+
   return (
     <div className='ExamProgress'>
-      {props.dailyQuestions.map((q, i) => {
-        const key = 'question' + (i+1);
-        const currQ = q.fields[key];
+      { allQuestions.map((q, i) => {
+        const currQ = allQuestions[i];
         const { lesson, topic } = currQ.fields;
         const backgroundStyles = {
           background: getCategoryColor(topic)
         }
+
         return (
-          <div className='questionCell' key={i} onClick={() => props.setQuestion(lesson, topic)}>
+          <div className='questionCell' key={i} onClick={() => props.setQuestion(q.fields)}>
             <div style={backgroundStyles} className='category'> {topic.substring(0,3)}</div>
             <div className='index'> Q-0{lesson} </div>
             <div className='status'> COMPLETE </div>

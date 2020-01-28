@@ -9,12 +9,15 @@ module.exports = withSass(withFonts({
     APP_ID: process.env.APP_ID,
     APP_SECRET: process.env.APP_SECRET,
     CONTENTFUL_API_TOKEN: process.env.CONTENTFUL_API_TOKEN,
-    CONTENTFUL_SPACE_ID: process.env.CONTENTFUL_SPACE_ID
+    CONTENTFUL_SPACE_ID: process.env.CONTENTFUL_SPACE_ID,
+    GOOGLE_APPLICATION_CREDENTIALS: process.env.GOOGLE_APPLICATION_CREDENTIALS
   },
   webpack: (config) => {
     // Fixes npm packages that depend on `fs` module
     config.node = {
       fs: 'empty',
+      child_process : 'empty',
+      dns: 'empty',
       net: 'empty',
       tls: 'empty'
     };

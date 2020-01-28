@@ -9,6 +9,7 @@ const getUrlVars = url => {
     return vars;
 }
 
+
 export default async (req, res) => {
   if (req.method === 'POST') {
     let code = getUrlVars(req.url)["code"];
