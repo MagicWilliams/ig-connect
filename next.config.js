@@ -8,6 +8,8 @@ module.exports = withSass(withFonts({
   env: {
     APP_ID: process.env.APP_ID,
     APP_SECRET: process.env.APP_SECRET,
+    CONTENTFUL_API_TOKEN: process.env.CONTENTFUL_API_TOKEN,
+    CONTENTFUL_SPACE_ID: process.env.CONTENTFUL_SPACE_ID
   },
   webpack: (config) => {
     // Fixes npm packages that depend on `fs` module
