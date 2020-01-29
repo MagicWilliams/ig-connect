@@ -6,12 +6,10 @@ import React, { useState, useEffect, useRef } from 'react';
 export function useInterval(callback, delay) {
   const savedCallback = useRef();
 
-  // Remember the latest callback.
   useEffect(() => {
     savedCallback.current = callback;
   }, [callback]);
 
-  // Set up the interval.
   useEffect(() => {
     function tick() {
       savedCallback.current();
@@ -23,6 +21,7 @@ export function useInterval(callback, delay) {
   }, [delay]);
 }
 
+// Returns a formatted string of the hours, minutes, and seconds between two times.
 export function getTimeUntil(currTime, scheduledTime) {
   const timeUntil = Math.round((scheduledTime - currTime) / 1000);
   const seconds = timeUntil % 60;

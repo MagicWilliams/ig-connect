@@ -26,12 +26,19 @@ UserPage.getInitialProps = async function(ctx) {
   let dailyQuestions;
   let scoreData;
   let allAnswers = [];
+  let lessonTimes = [];
 
   await getScoreData(ctx.query.user).then((res) => {
     scoreData = res;
   });
   await client.getEntries({ content_type: 'dailyQuestions' }).then(async res => {
     dailyQuestions = [...res.items];
+
+    for (var field in dailyQuestions[0].fields) {
+      if (dailyQuestions[0].fields[field].fields) {
+        lessonTimes.push(dailyQuestions[0].fields[field].fields.lessonTime);
+      }
+    };
 
     for (var a = 0; a < dailyQuestions.length; a++) {
       for (var field in dailyQuestions[a].fields) {
@@ -49,18 +56,30 @@ UserPage.getInitialProps = async function(ctx) {
     }
   });
 
-  return { scoreData, dailyQuestions, allAnswers };
+
+
+
+  return { scoreData, dailyQuestions, allAnswers, lessonTimes };
 }
 
 function UserPage(props) {
-  const { router, allAnswers, scoreData, dailyQuestions } = props;
+
+  useInterval(() => {
+    var usaTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+    const now = new Date(usaTime);
+    setTime(now.toISOString());
+  }, 1000);
+
+  const { router, allAnswers, scoreData, dailyQuestions, lessonTimes } = props;
   const username = props.router.query.user;
+
   const initState = {
     day: 2,
     lesson: '--',
     topic: '--',
     questionText: '',
   }
+
   var usaTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
   usaTime = new Date(usaTime);
   const [currQ, setCurrQ] = useState(initState);
@@ -74,11 +93,13 @@ function UserPage(props) {
     })
   }
 
-  useInterval(() => {
-    var usaTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
-    const now = new Date(usaTime);
-    setTime(now.toISOString());
-  }, 1000);
+  const getNextTime = () => {
+    for (var a = 0; a < lessonTimes.length; a++) {
+      const t = new Date(lessonTimes[a]);
+      const currTimeObj = new Date(time);
+      return currTimeObj < t ? getTimeUntil(currTimeObj, t) : '--:--:--';
+    }
+  }
 
   const answerOptions = getAnswerOptions(allAnswers, currQ);
 
@@ -111,7 +132,7 @@ function UserPage(props) {
           </div>
         )}
 
-        <p className='timer'> Next Question: 00:22:51 </p>
+        <p className='timer'> {'Next Question: ' + getNextTime()}</p>
         <p className='id'> S@: {username} </p>
 
         <style jsx>{`
