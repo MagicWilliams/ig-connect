@@ -1,9 +1,9 @@
 import React from 'react';
 import { getCategoryColor } from '../utils';
+import { getAnswersByDay, getTodaysScore, getTimeUntil } from '../utils';
 
 const ExamProgress = props => {
-  console.log('Start');
-
+  const DAY_INDEX = 2;
   const getQs = questions => {
     let allQs = [];
     for (var field in questions) {
@@ -15,6 +15,32 @@ const ExamProgress = props => {
   }
 
   const allQuestions = getQs(props.dailyQuestions);
+  const answerSubmitted = (day, lesson) => {
+    const { answers } = props.scoreData;
+    for (var key in answers) {
+      const { day, lessonNumberIndex } = answers[key].answerData;
+      if (day === DAY_INDEX && lessonNumberIndex === lesson) {
+        return true; // Answer already submitted
+      }
+    }
+    return false; // No answer submitted yet
+  }
+
+  const getStatus = currQ => {
+    const { lesson, lessonTime } = currQ.fields;
+    const { time } = props;
+
+    const currTime = new Date(time);
+    const questionTime = new Date(lessonTime);
+    const isBefore = currTime < questionTime;
+    return answerSubmitted(DAY_INDEX, lesson) || !isBefore ? 'COMPLETED' : getTimeUntil(currTime, questionTime);
+  }
+
+  const handleClick = (currQ, fields) => {
+    if (getStatus(currQ) !== 'COMPLETED') {
+      props.setQuestion(fields);
+    }
+  }
 
   return (
     <div className='ExamProgress'>
@@ -26,10 +52,10 @@ const ExamProgress = props => {
         }
 
         return (
-          <div className='questionCell' key={i} onClick={() => props.setQuestion(q.fields)}>
+          <div className='questionCell' key={i} onClick={() => handleClick(currQ, q.fields)}>
             <div style={backgroundStyles} className='category'> {topic.substring(0,3)}</div>
             <div className='index'> Q-0{lesson} </div>
-            <div className='status'> COMPLETE </div>
+            <div className='status'> {getStatus(currQ)} </div>
           </div>
         );
       })}

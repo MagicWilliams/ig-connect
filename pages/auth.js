@@ -17,8 +17,6 @@ const getUrlVars = url => {
 
 class Auth extends React.Component {
   async componentDidMount() {
-
-
     const { router } = this.props;
     const path = this.props.router.asPath;
     const fullCode = getUrlVars(path)['code'];

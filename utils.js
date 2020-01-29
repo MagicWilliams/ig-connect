@@ -1,18 +1,78 @@
 import fetch from 'isomorphic-unfetch';
 import firebase from './firebase';
 import { Colors } from './style-vars';
+import React, { useState, useEffect, useRef } from 'react';
+
+export function useInterval(callback, delay) {
+  const savedCallback = useRef();
+
+  // Remember the latest callback.
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  // Set up the interval.
+  useEffect(() => {
+    function tick() {
+      savedCallback.current();
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}
+
+export function getTimeUntil(currTime, scheduledTime) {
+  const timeUntil = Math.round((scheduledTime - currTime) / 1000);
+  const seconds = timeUntil % 60;
+  const minutes = Math.floor((timeUntil / 60) % 60);
+  const hours = Math.floor(timeUntil / 3600);
+  const hrStr = hours < 10 ? '0'+hours : hours;
+  const minStr = minutes < 10 ? '0'+minutes : minutes;
+  const secStr = seconds < 10 ? '0'+seconds : seconds;
+  return hrStr + ':' + minStr + ':' + secStr;
+}
 
 export function getCategoryColor(topic) {
   return topic === 'Music' ? Colors.gold :
   topic === 'Art' ? Colors.blue :
   topic === 'Science' ? Colors.green :
   topic === 'Geography' ? Colors.pink :
-  topic === 'Vocab' ? Colors.purple :
+  topic === 'Vocabulary' ? Colors.purple :
   topic === 'History' ? Colors.red :
   topic === 'Film' ? Colors.black :
   topic === 'Math' ? Colors.gray :
   '#000000';
 }
+
+export function getAnswersByDay(dayIndex, answers) {
+  let todaysAnswers = [];
+  const hashes = Object.keys(answers);
+  for (var a = 0; a < hashes.length; a++) {
+    const { answerData } = answers[hashes[a]];
+    if (answerData.day === dayIndex) {
+      todaysAnswers.push(answerData);
+    }
+  }
+  return todaysAnswers
+}
+
+export function getTodaysScore(today, answers) {
+  var correctAnswers = 0;
+  const todaysAnswers = getAnswersByDay(today, answers);
+  if (todaysAnswers.length === 0) {
+    return '--'
+  }
+
+  for (var a = 0; a < todaysAnswers.length; a++) {
+    if (todaysAnswers[a].correct) {
+      correctAnswers++;
+    }
+  }
+  return (correctAnswers / 8) * 100;
+}
+
 
 export async function getScoreData(username) {
   var database = firebase.database();

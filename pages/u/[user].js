@@ -3,9 +3,12 @@ import Head from 'next/head'
 import { withRouter } from 'next/router'
 import Question from '../../components/Question';
 import StatusBar from '../../components/StatusBar';
+import ReportCard from '../../components/ReportCard';
 import ExamProgress from '../../components/ExamProgress';
 import { Sizing, Colors } from '../../style-vars';
-import { getScoreData, getCategoryColor } from '../../utils';
+import { getScoreData, getCategoryColor, useInterval, getTimeUntil } from '../../utils';
+import moment from 'moment';
+import DevTools from 'mobx-react-devtools';
 
 const checkForCode = url => {
     console.log(url.substring(0, 6))
@@ -50,7 +53,7 @@ UserPage.getInitialProps = async function(ctx) {
 }
 
 function UserPage(props) {
-  const { router, allAnswers, scoreData } = props;
+  const { router, allAnswers, scoreData, dailyQuestions } = props;
   const username = props.router.query.user;
   const initState = {
     day: 2,
@@ -58,59 +61,97 @@ function UserPage(props) {
     topic: '--',
     questionText: '',
   }
+  var usaTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+  usaTime = new Date(usaTime);
   const [currQ, setCurrQ] = useState(initState);
+  const [time, setTime] = useState(usaTime.toISOString());
+  const [showReportCard, setShowReportCard] = useState(false);
   const reload = () => window.location.reload();
-  const getAnswerOptions = (allAnswers, day, lesson) => {
+  const getAnswerOptions = (allAnswers, currQ) => {
+    const { day, lesson } = currQ;
     return allAnswers.filter(answer => {
       return answer.day === day && answer.lessonNumberIndex == lesson;
     })
   }
-  const answerOptions = getAnswerOptions(allAnswers, currQ.day, currQ.lesson);
+
+  useInterval(() => {
+    var usaTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+    const now = new Date(usaTime);
+    setTime(now.toISOString());
+  }, 1000);
+
+  const answerOptions = getAnswerOptions(allAnswers, currQ);
 
   return (
-    <div>
-      <Head>
-        <title> Welcome to School University </title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <div className='header'>
-        <img onClick={reload} src='/img/logo-horizontal.png' alt='School University' />
-        <h5> InstaSCAN&trade; </h5>
+      <div className='UserPage'>
+        <Head>
+          <title> Welcome to School University </title>
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <div className='header'>
+          <img onClick={reload} src='/img/logo-horizontal.png' alt='School University' />
+          <h5 onClick={() => setShowReportCard(!showReportCard)}> InstaSCAN&trade; </h5>
+        </div>
+
+        { showReportCard && (
+          <ReportCard scoreData={scoreData} />
+        )}
+
+        { !showReportCard && (
+          <div>
+            <StatusBar day='02' lesson={currQ.lesson} topic={currQ.topic} />
+            <div className="body">
+              { currQ.lesson != '--' && (
+                <Question time={time} currQ={currQ} username={username} answerOptions={answerOptions} />
+              )}
+              { currQ.lesson === '--' && (
+                <ExamProgress time={time} scoreData={scoreData} setQuestion={setCurrQ} dailyQuestions={dailyQuestions[0].fields} />
+              )}
+            </div>
+          </div>
+        )}
+
+        <p className='timer'> Next Question: 00:22:51 </p>
+        <p className='id'> S@: {username} </p>
+
+        <style jsx>{`
+
+          .UserPage {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: calc(100vh - 50px);
+          }
+
+          .header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: ${Sizing.lg};
+          }
+
+          .header img {
+            position: relative;
+            left: -3px;
+            width: 50%;
+          }
+
+          .header h5 {
+            font-weight: bold;
+            color: ${getCategoryColor(currQ.topic)};
+            font-family: 'Arial';
+          }
+
+          .timer {
+            margin-top: ${Sizing.xl};
+          }
+
+          .timer, .id {
+            text-align: center;
+          }
+        `}</style>
       </div>
-
-      <StatusBar day='02' lesson={currQ.lesson} topic={currQ.topic} color={getCategoryColor(currQ.topic)} />
-
-      <div className="body">
-      { currQ.lesson != '--' && (
-        <Question currQ={currQ} username={username} getCategoryColor={getCategoryColor} answerOptions={answerOptions} />
-      )}
-      { currQ.lesson === '--' && (
-        <ExamProgress setQuestion={setCurrQ} dailyQuestions={props.dailyQuestions[0].fields} />
-      )}
-      </div>
-
-      <style jsx>{`
-        .header {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: ${Sizing.lg};
-        }
-
-        .header img {
-          position: relative;
-          left: -3px;
-          width: 50%;
-        }
-
-        .header h5 {
-          font-weight: bold;
-          color: ${getCategoryColor(currQ.topic)};
-          font-family: 'Arial';
-        }
-      `}</style>
-    </div>
   );
 }
 

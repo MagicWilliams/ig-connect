@@ -64,9 +64,10 @@ export default class MyApp extends App {
   render() {
     const { Component, pageProps, router } = this.props;
     return (
-      <div>
+      <div className='App'>
         <Component {...pageProps} key={router.route} />
         <style jsx global>{`
+          
           @font-face {
             font-family: 'IMBPlexMono-regular';
             src: url('/fonts/IBMPlexMono-regular.ttf');
@@ -87,6 +88,7 @@ export default class MyApp extends App {
 
           body {
             margin: 25px !important;
+
           }
 
           a {

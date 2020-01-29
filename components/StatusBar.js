@@ -1,7 +1,9 @@
 import React from 'react';
 import { Sizing, Colors } from '../style-vars';
+import { getCategoryColor } from '../utils';
 
 const StatusBar = props => {
+  const { color } = props;
   return (
     <div className='StatusBar'>
       <div className='day'>
@@ -21,15 +23,15 @@ const StatusBar = props => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border-top: 1px solid ${props.color};
-          border-bottom: 1px solid ${props.color};
-          border-right: 1px solid ${props.color};
+          border-top: 1px solid ${getCategoryColor(color)};
+          border-bottom: 1px solid ${getCategoryColor(color)};
+          border-right: 1px solid ${getCategoryColor(color)};
           margin: ${Sizing.xl} 0px;
-          color: ${props.color};
+          color: ${getCategoryColor(color)};
         }
 
         .StatusBar div {
-          border-left: 1px solid ${props.color};
+          border-left: 1px solid ${getCategoryColor(color)};
           text-align: center;
         }
 
@@ -38,7 +40,7 @@ const StatusBar = props => {
         }
 
         .topic {
-          background: ${props.topic === '--' ? 'transparent' : props.color};
+          background: ${props.topic === '--' ? 'transparent' : getCategoryColor(color)};
           color: ${props.topic === '--' ? 'black' : 'white'};
         }
 

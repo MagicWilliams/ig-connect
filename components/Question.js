@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sizing, Colors } from '../style-vars';
-import { postAnswer } from '../utils';
+import { postAnswer, getCategoryColor } from '../utils';
 
 const Question = props => {
   const [ showChoices, setShowChoices ] = useState(false);
@@ -8,7 +8,7 @@ const Question = props => {
   const answerSelected = selection !== '';
   const { answerOptions, username } = props;
   const { topic, lesson, questionText } = props.currQ;
-  const color = props.getCategoryColor(topic);
+  const color = getCategoryColor(topic);
   const letterOptions = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
   const btnText = !showChoices ? 'Answer' : showChoices && !answerSelected ? 'Select An Answer' : 'Submit';
 
@@ -20,10 +20,12 @@ const Question = props => {
       }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const selectionIndex = letterOptions.indexOf(selection);
     const answerData = answerOptions[selectionIndex];
-    postAnswer({answerData: {...answerData}, username});
+    await postAnswer({answerData: {...answerData}, username}).then(() => {
+      window.location.reload();
+    });
   }
 
   const getLetterOption = index => letterOptions[index];
@@ -63,8 +65,6 @@ const Question = props => {
       )}
 
       <button className='grant' onClick={() => handleClick(showChoices, answerSelected)}> {btnText} </button>
-      <p className='timer'> Time Remaining: 00:22:51 </p>
-      <p className='id'> S@: {username} </p>
 
       <style jsx> {`
         .question-text {
