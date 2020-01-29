@@ -21,6 +21,16 @@ export function useInterval(callback, delay) {
   }, [delay]);
 }
 
+export function getQs(questions) {
+  let allQs = [];
+  for (var field in questions) {
+    if (questions[field].fields) {
+      allQs.push(questions[field]);
+    }
+  }
+  return allQs;
+}
+
 // Returns a formatted string of the hours, minutes, and seconds between two times.
 export function getTimeUntil(currTime, scheduledTime) {
   const timeUntil = Math.round((scheduledTime - currTime) / 1000);

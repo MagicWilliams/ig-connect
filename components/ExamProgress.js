@@ -1,18 +1,10 @@
 import React from 'react';
 import { getCategoryColor } from '../utils';
-import { getAnswersByDay, getTodaysScore, getTimeUntil } from '../utils';
+import { getAnswersByDay, getTodaysScore, getTimeUntil, getQs } from '../utils';
 
 const ExamProgress = props => {
   const DAY_INDEX = 2;
-  const getQs = questions => {
-    let allQs = [];
-    for (var field in questions) {
-      if (questions[field].fields) {
-        allQs.push(questions[field]);
-      }
-    }
-    return allQs;
-  }
+
 
   const allQuestions = getQs(props.dailyQuestions);
   const answerSubmitted = (day, lesson) => {

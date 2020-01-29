@@ -9,7 +9,7 @@ import { Sizing, Colors } from '../../style-vars';
 import { getScoreData, getCategoryColor, useInterval, getTimeUntil } from '../../utils';
 import moment from 'moment';
 import DevTools from 'mobx-react-devtools';
-
+const DAY_INDEX = 2;
 const checkForCode = url => {
     console.log(url.substring(0, 6))
     if (url.substring(0, 6) === '?code=') {
@@ -56,14 +56,10 @@ UserPage.getInitialProps = async function(ctx) {
     }
   });
 
-
-
-
   return { scoreData, dailyQuestions, allAnswers, lessonTimes };
 }
 
 function UserPage(props) {
-
   useInterval(() => {
     var usaTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
     const now = new Date(usaTime);
@@ -84,13 +80,23 @@ function UserPage(props) {
   usaTime = new Date(usaTime);
   const [currQ, setCurrQ] = useState(initState);
   const [time, setTime] = useState(usaTime.toISOString());
-  const [showReportCard, setShowReportCard] = useState(false);
   const reload = () => window.location.reload();
   const getAnswerOptions = (allAnswers, currQ) => {
     const { day, lesson } = currQ;
     return allAnswers.filter(answer => {
       return answer.day === day && answer.lessonNumberIndex == lesson;
     })
+  }
+
+  const showReportCard = () => {
+    for (var a = 0; a < lessonTimes.length; a++) {
+      const t = new Date(lessonTimes[a]);
+      const currTimeObj = new Date(time);
+      if (currTimeObj < t) {
+        return false;
+      };
+    }
+    return true;
   }
 
   const getNextTime = () => {
@@ -100,7 +106,8 @@ function UserPage(props) {
       return currTimeObj < t ? getTimeUntil(currTimeObj, t) : '--:--:--';
     }
   }
-
+  console.log(showReportCard());
+  const [showingReportCard, setShowingReportCard] = useState(showReportCard());
   const answerOptions = getAnswerOptions(allAnswers, currQ);
 
   return (
@@ -111,14 +118,14 @@ function UserPage(props) {
         </Head>
         <div className='header'>
           <img onClick={reload} src='/img/logo-horizontal.png' alt='School University' />
-          <h5 onClick={() => setShowReportCard(!showReportCard)}> InstaSCAN&trade; </h5>
+          <h5 onClick={() => setShowingReportCard(!showingReportCard)}> InstaSCAN&trade; </h5>
         </div>
 
-        { showReportCard && (
-          <ReportCard scoreData={scoreData} />
+        { showingReportCard && (
+          <ReportCard dailyQuestions={dailyQuestions[0].fields} today={DAY_INDEX} nextTime={getNextTime()} scoreData={scoreData} />
         )}
 
-        { !showReportCard && (
+        { !showingReportCard && (
           <div>
             <StatusBar day='02' lesson={currQ.lesson} topic={currQ.topic} />
             <div className="body">

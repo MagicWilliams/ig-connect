@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { Sizing, Colors } from '../style-vars';
-import { getAnswersByDay, getTodaysScore } from '../utils';
+import { getAnswersByDay, getTodaysScore, getCategoryColor, getQs } from '../utils';
 
 const ReportCard = props => {
   const { answers } = props.scoreData;
+  const { today } = props;
   getTodaysScore(2, answers);
+  const allQuestions = getQs(props.dailyQuestions);
   return (
     <div className='ReportCard'>
       <h1> Report Card </h1>
       <div className='ReportCard-body'>
-        <DayCell day={1} score={getTodaysScore(1, answers)}/>
-        <DayCell day={2} score={getTodaysScore(2, answers)}/>
-        <DayCell day={3} score={getTodaysScore(3, answers)}/>
-        <DayCell day={4} score={getTodaysScore(4, answers)}/>
-        <DayCell day={5} score={getTodaysScore(5, answers)}/>
+        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={1} score={getTodaysScore(1, answers)}/>
+        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={2} score={getTodaysScore(2, answers)}/>
+        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={3} score={getTodaysScore(3, answers)}/>
+        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={4} score={getTodaysScore(4, answers)}/>
+        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={5} score={getTodaysScore(5, answers)}/>
       </div>
       <style jsx> {`
         .ReportCard h1 {
@@ -37,12 +39,45 @@ const ReportCard = props => {
 }
 
 const DayCell = props => {
-  const TODAY = 2;
+  const { today, day, answers, allQuestions } = props;
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const rankText = props.score != '--' ? '--/--' : 'Calculating...';
+  const rankText = props.score === '--' || today < day ? '--/--' : 'Calculating...';
+  const processAnswers = answers => {
+    let trueAnswers = [];
+    for (var a in answers) {
+      trueAnswers.push(answers[a].answerData);
+    }
+    return trueAnswers;
+  }
+
+  const checkAnswers = day => {
+    const trueAnswers = processAnswers(answers);
+    const results = [];
+
+    for (var a = 0; a < allQuestions.length; a++) {
+      results.push(false);
+    }
+
+    for (var a = 0; a < trueAnswers.length; a++) {
+      const { correct, lessonNumberIndex } = trueAnswers[a];
+      if (correct) {
+        const i = lessonNumberIndex - 1;
+        results[i] = true;
+      }
+    }
+
+    return results;
+  }
+
+  const handleOpening = () => {
+    if (props.today >= props.day) {
+      setDrawerOpen(!drawerOpen)
+    }
+  }
+
   return (
     <div className='DayCell'>
-      <div className='DayCell-handle' onClick={() => setDrawerOpen(!drawerOpen)}>
+      <div className='DayCell-handle' onClick={handleOpening}>
         <div className='left'>
           <p> {'Day 0' + props.day} </p>
           <p> {rankText} </p>
@@ -53,8 +88,25 @@ const DayCell = props => {
         </div>
       </div>
       { drawerOpen && (
-        <div>
-          Show the completed results here
+        <div className='resultsDrawer'>
+        { allQuestions.map((q, i) => {
+
+          const currQ = allQuestions[i];
+          const { lesson, topic, day } = currQ.fields;
+          const results = checkAnswers(day);
+          const backgroundStyles = {
+            background: getCategoryColor(topic)
+          }
+          const answerStatus = results[i] ? 'CORRECT' : 'INCORRECT';
+
+          return (
+            <div className='questionCell' key={i} onClick={() => handleClick(currQ, q.fields)}>
+              <div style={backgroundStyles} className='category'> {topic.substring(0,3)}</div>
+              <div className='index'> Q-0{lesson} </div>
+              <div className='status'> {answerStatus} </div>
+            </div>
+          );
+        })}
         </div>
       )}
 
@@ -78,6 +130,7 @@ const DayCell = props => {
           justify-content: space-between;
           align-items: center;
           width: 100%;
+          margin: ${Sizing.sm} 0px;
         }
 
         .left, .right {
@@ -94,6 +147,38 @@ const DayCell = props => {
 
         .right {
           text-align: right;
+        }
+
+        .resultsDrawer {
+          width: 100%;
+        }
+
+        .questionCell {
+          display: flex;
+          width: 100%;
+          border: 1px solid black;
+          height: 55px;
+        }
+
+        .category, .index {
+          width: 25%;
+          border-right: 1px solid black;
+          text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .status {
+          width: 50%;
+          text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .category {
+          color: white;
         }
 
       `}</style>
