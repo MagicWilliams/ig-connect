@@ -6,20 +6,10 @@ class FirebaseStore {
 		this.rootStore = _rootStore;
 	}
 
-	@observable scoreData = [];
+	@observable scoreData;
 
   @action.bound
   async fetchScoreData(username) {
-		console.log('50');
-		console.log('50');
-		console.log('50');
-		console.log('50');
-		console.log('50');
-		console.log('50');
-		console.log('50');
-		console.log('50');
-		console.log('50');
-		console.log('50');
 		var database = firebase.database();
 	  const formattedUser = username.replace(".", "_");
 	  var userRef = firebase.database().ref('/users/' + formattedUser);
@@ -30,25 +20,18 @@ class FirebaseStore {
 				console.log('NO USER FOUND. ADDING NEW USER TO FIREBASE.');
 	      const setData = {
 	        username: username,
+					answers: [],
 	      }
 	      userRef.set(setData);
-	      res = setData;
-	    } else if (snapshot.val() === undefined) {
-				console.log('firebase value undefined');
-			} else {
-				console.log('success!');
+				res = setData;
+	    } else {
 				res = snapshot.val();
 	    }
 	  }, function (errorObject) {
 	    console.log("The read failed: " + errorObject.code);
-	  });
-
-		this.scoreData = res;
-		console.log(res)
-
-	  if (res != undefined) {
-	    console.log('rip');
-	  }
+	  }).then(() => {
+			this.scoreData = res;
+		});
 	}
 }
 

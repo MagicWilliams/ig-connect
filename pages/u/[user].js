@@ -14,7 +14,7 @@ import { Provider } from 'mobx-react';
 import RootStore from '../../stores/RootStore';
 import {inject, observer} from 'mobx-react';
 
-const DAY_INDEX = 2;
+const DAY_INDEX = 3;
 const checkForCode = url => {
     console.log(url.substring(0, 6))
     if (url.substring(0, 6) === '?code=') {
@@ -24,7 +24,6 @@ const checkForCode = url => {
 
 Page.getInitialProps = async function(ctx) {
   const { user } = ctx.query;
-
   if (user !== undefined) {
     return { username: ctx.query.user }
   }
@@ -61,7 +60,8 @@ class UserPage extends React.Component {
         questionText: '',
       },
       showingReportCard: false,
-      dataLoaded: false
+      dataLoaded: false,
+      scoreData: null,
     }
   }
 
@@ -72,8 +72,10 @@ class UserPage extends React.Component {
 
     const { fetchQuestions, dailyQuestions, allAnswers, lessonTimes } = this.props.store.contentfulStore;
     const { fetchScoreData, scoreData } = this.props.store.firebaseStore;
-    await Promise.all([fetchScoreData(this.props.user), fetchQuestions()]).then(() => {
+    await Promise.all([fetchScoreData(this.props.user), fetchQuestions()]).then((values) => {
+      console.log('RESULTS \n\n\n', scoreData);
       this.setState({
+        scoreData: scoreData,
         dataLoaded: true,
       });
     });
@@ -122,83 +124,88 @@ class UserPage extends React.Component {
   }
 
   render() {
-    const { lessonTimes, dailyQuestions, allAnswers } = this.props.store.contentfulStore;
-    const { scoreData } = this.props.store.firebaseStore;
-    const { time, router, user } = this.props;
     const { showingReportCard, currQ, dataLoaded } = this.state;
-    const reload = () => window.location.reload();
-    const answerOptions = this.getAnswerOptions(allAnswers, currQ);
-    console.log(scoreData);
-    return dataLoaded ? (
-        <div className='UserPage'>
-          <Head>
-            <title> Welcome to School University </title>
-            <link rel="icon" href="/favicon.ico" />
-          </Head>
-          <div className='header'>
-            <img onClick={reload} src='/img/logo-horizontal.png' alt='School University' />
-            <h5 onClick={() => this.setState({ showingReportCard: !showingReportCard})}> InstaSCAN&trade; </h5>
-          </div>
+    if (!dataLoaded) {
+      return null;
+    } else {
+      const { lessonTimes, dailyQuestions, allAnswers } = this.props.store.contentfulStore;
+      const { scoreData } = this.props.store.firebaseStore;
+      const { time, router, user } = this.props;
+      const reload = () => window.location.reload();
+      const answerOptions = this.getAnswerOptions(allAnswers, currQ);
+      console.log(scoreData);
 
-          { showingReportCard && (
-            <ReportCard dailyQuestions={dailyQuestions[0].fields} today={DAY_INDEX} nextTime={this.getNextTime()} scoreData={scoreData} />
-          )}
-
-          { !showingReportCard && (
-            <div>
-              <StatusBar day='02' lesson={currQ.lesson} topic={currQ.topic} />
-              <div className="body">
-                { currQ.lesson != '--' && (
-                  <Question time={time} currQ={currQ} user={user} answerOptions={answerOptions} />
-                )}
-                { currQ.lesson === '--' && (
-                  <ExamProgress time={time} scoreData={scoreData} setQuestion={this.setCurrQ} dailyQuestions={dailyQuestions[0].fields} />
-                )}
-              </div>
+      return (
+          <div className='UserPage'>
+            <Head>
+              <title> Welcome to School University </title>
+              <link rel="icon" href="/favicon.ico" />
+            </Head>
+            <div className='header'>
+              <img onClick={reload} src='/img/logo-horizontal.png' alt='School University' />
+              <h5 onClick={() => this.setState({ showingReportCard: !showingReportCard})}> InstaSCAN&trade; </h5>
             </div>
-          )}
 
-          <p className='timer'> {'Next Question: ' + this.getNextTime()}</p>
-          <p className='id'> S@: {user} </p>
-          <style jsx>{`
+            { showingReportCard && (
+              <ReportCard dailyQuestions={dailyQuestions[0].fields} today={DAY_INDEX} nextTime={this.getNextTime()} scoreData={scoreData} />
+            )}
 
-            .UserPage {
-              display: flex;
-              flex-direction: column;
-              height: 100%;
-              min-height: calc(100vh - 50px);
-            }
+            { !showingReportCard && (
+              <div>
+                <StatusBar day='02' lesson={currQ.lesson} topic={currQ.topic} />
+                <div className="body">
+                  { currQ.lesson != '--' && (
+                    <Question time={time} currQ={currQ} user={user} answerOptions={answerOptions} />
+                  )}
+                  { currQ.lesson === '--' && (
+                    <ExamProgress time={time} scoreData={scoreData} setQuestion={this.setCurrQ} dailyQuestions={dailyQuestions[0].fields} />
+                  )}
+                </div>
+              </div>
+            )}
 
-            .header {
-              width: 100%;
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              margin-bottom: ${Sizing.lg};
-            }
+            <p className='timer'> {'Next Question: ' + this.getNextTime()}</p>
+            <p className='id'> S@: {user} </p>
+            <style jsx>{`
 
-            .header img {
-              position: relative;
-              left: -3px;
-              width: 50%;
-            }
+              .UserPage {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                min-height: calc(100vh - 50px);
+              }
 
-            .header h5 {
-              font-weight: bold;
-              color: ${getCategoryColor(currQ.topic)};
-              font-family: 'Arial';
-            }
+              .header {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: ${Sizing.lg};
+              }
 
-            .timer {
-              margin-top: ${Sizing.xl};
-            }
+              .header img {
+                position: relative;
+                left: -3px;
+                width: 50%;
+              }
 
-            .timer, .id {
-              text-align: center;
-            }
-          `}</style>
-        </div>
-    ) : <h1> Loading ... </h1>;
+              .header h5 {
+                font-weight: bold;
+                color: ${getCategoryColor(currQ.topic)};
+                font-family: 'Arial';
+              }
+
+              .timer {
+                margin-top: ${Sizing.xl};
+              }
+
+              .timer, .id {
+                text-align: center;
+              }
+            `}</style>
+          </div>
+      );
+    }
   }
 }
 

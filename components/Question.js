@@ -7,6 +7,8 @@ const Question = props => {
   const [ selection, setSelection ] = useState('');
   const answerSelected = selection !== '';
   const { answerOptions, user } = props;
+  const filtered = answerOptions.filter((a, i) => answerOptions.indexOf(a) === i);
+  console.log(filtered);
   const { topic, lesson, questionText } = props.currQ;
   const color = getCategoryColor(topic);
   const letterOptions = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -22,7 +24,7 @@ const Question = props => {
 
   const handleSubmit = async () => {
     const selectionIndex = letterOptions.indexOf(selection);
-    const answerData = answerOptions[selectionIndex];
+    const answerData = filtered[selectionIndex];
     await postAnswer({answerData: {...answerData}, user}).then(() => {
       window.location.reload();
     });
@@ -39,7 +41,7 @@ const Question = props => {
       { showChoices && (
         <div>
           <div className='answerOptions'>
-            { answerOptions.map((answer, i) => {
+            { filtered.map((answer, i) => {
               return (
                 <div className='choice'>
                   <div className='letter'> {getLetterOption(i)} </div>
@@ -49,7 +51,7 @@ const Question = props => {
             })}
           </div>
           <div className='optionSelection'>
-            { answerOptions.map((answer, i) => {
+            { filtered.map((answer, i) => {
               const highlightStyling = {
                 background: selection === getLetterOption(i) ? color : 'white',
                 color: selection === getLetterOption(i) ? 'white' : 'black',

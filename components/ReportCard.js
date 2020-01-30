@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sizing, Colors } from '../style-vars';
-import { getAnswersByDay, getTodaysScore, getCategoryColor, getQs } from '../utils';
+import { getTodaysScore, getCategoryColor, getQs } from '../utils';
 
 const ReportCard = props => {
   if (!props.scoreData) {
