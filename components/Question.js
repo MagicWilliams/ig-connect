@@ -6,7 +6,7 @@ const Question = props => {
   const [ showChoices, setShowChoices ] = useState(false);
   const [ selection, setSelection ] = useState('');
   const answerSelected = selection !== '';
-  const { answerOptions, username } = props;
+  const { answerOptions, user } = props;
   const { topic, lesson, questionText } = props.currQ;
   const color = getCategoryColor(topic);
   const letterOptions = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -23,7 +23,7 @@ const Question = props => {
   const handleSubmit = async () => {
     const selectionIndex = letterOptions.indexOf(selection);
     const answerData = answerOptions[selectionIndex];
-    await postAnswer({answerData: {...answerData}, username}).then(() => {
+    await postAnswer({answerData: {...answerData}, user}).then(() => {
       window.location.reload();
     });
   }

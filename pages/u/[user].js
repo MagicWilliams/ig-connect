@@ -6,9 +6,14 @@ import StatusBar from '../../components/StatusBar';
 import ReportCard from '../../components/ReportCard';
 import ExamProgress from '../../components/ExamProgress';
 import { Sizing, Colors } from '../../style-vars';
-import { getScoreData, getCategoryColor, useInterval, getTimeUntil } from '../../utils';
+import { getScoreData, getCategoryColor, useInterval, getTimeUntil, fetchInitialData } from '../../utils';
+import firebase from '../../firebase';
 import moment from 'moment';
 import DevTools from 'mobx-react-devtools';
+import { Provider } from 'mobx-react';
+import RootStore from '../../stores/RootStore';
+import {inject, observer} from 'mobx-react';
+
 const DAY_INDEX = 2;
 const checkForCode = url => {
     console.log(url.substring(0, 6))
@@ -17,78 +22,71 @@ const checkForCode = url => {
     }
 }
 
-UserPage.getInitialProps = async function(ctx) {
-  const client = require('contentful').createClient({
-    space: process.env.SU_CONTENTFUL_SPACE_ID,
-    accessToken: process.env.SU_CONTENTFUL_API_TOKEN
-  });
+Page.getInitialProps = async function(ctx) {
+  const { user } = ctx.query;
 
-  let dailyQuestions;
-  let scoreData;
-  let allAnswers = [];
-  let lessonTimes = [];
-
-  await getScoreData(ctx.query.user).then((res) => {
-    scoreData = res;
-  });
-  await client.getEntries({ content_type: 'dailyQuestions' }).then(async res => {
-    dailyQuestions = [...res.items];
-
-    for (var field in dailyQuestions[0].fields) {
-      if (dailyQuestions[0].fields[field].fields) {
-        lessonTimes.push(dailyQuestions[0].fields[field].fields.lessonTime);
-      }
-    };
-
-    for (var a = 0; a < dailyQuestions.length; a++) {
-      for (var field in dailyQuestions[a].fields) {
-        if (field !== 'day') {
-          const { answerOptions } = dailyQuestions[a].fields[field].fields;
-          for (var option in answerOptions) {
-            const { id } = answerOptions[option].sys;
-            await client.getEntry(id)
-            .then(entry => {
-              allAnswers.push(entry.fields)
-            });
-          }
-        }
-      };
-    }
-  });
-
-  return { scoreData, dailyQuestions, allAnswers, lessonTimes };
+  if (user !== undefined) {
+    return { username: ctx.query.user }
+  }
 }
 
-function UserPage(props) {
+function Page(props) {
   useInterval(() => {
     var usaTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
     const now = new Date(usaTime);
     setTime(now.toISOString());
   }, 1000);
 
-  const { router, allAnswers, scoreData, dailyQuestions, lessonTimes } = props;
-  const username = props.router.query.user;
-
-  const initState = {
-    day: 2,
-    lesson: '--',
-    topic: '--',
-    questionText: '',
-  }
-
   var usaTime = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
   usaTime = new Date(usaTime);
-  const [currQ, setCurrQ] = useState(initState);
   const [time, setTime] = useState(usaTime.toISOString());
-  const reload = () => window.location.reload();
-  const getAnswerOptions = (allAnswers, currQ) => {
-    const { day, lesson } = currQ;
-    return allAnswers.filter(answer => {
-      return answer.day === day && answer.lessonNumberIndex == lesson;
-    })
+
+  return (
+    <Provider store={RootStore}>
+      <UserPage time={time} data={props} user={props.username} />
+    </Provider>
+  )
+}
+
+@inject("store") @observer
+class UserPage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      width: -1,
+      currQ: {
+        day: 2,
+        lesson: '--',
+        topic: '--',
+        questionText: '',
+      },
+      showingReportCard: false,
+      dataLoaded: false
+    }
   }
 
-  const showReportCard = () => {
+  async componentDidMount() {
+    this.setState({
+      showReportCard: this.showReportCard(),
+    });
+
+    const { fetchQuestions, dailyQuestions, allAnswers, lessonTimes } = this.props.store.contentfulStore;
+    const { fetchScoreData, scoreData } = this.props.store.firebaseStore;
+    await Promise.all([fetchScoreData(this.props.user), fetchQuestions()]).then(() => {
+      this.setState({
+        dataLoaded: true,
+      });
+    });
+  }
+
+  showReportCard = () => {
+    const { lessonTimes } = this.props.store.contentfulStore;
+    const { time } = this.props;
+
+    if (!lessonTimes) {
+      return false;
+    }
+
     for (var a = 0; a < lessonTimes.length; a++) {
       const t = new Date(lessonTimes[a]);
       const currTimeObj = new Date(time);
@@ -99,88 +97,109 @@ function UserPage(props) {
     return true;
   }
 
-  const getNextTime = () => {
+  getNextTime = () => {
+    const { lessonTimes } = this.props.store.contentfulStore;
+    const { time } = this.props;
     for (var a = 0; a < lessonTimes.length; a++) {
       const t = new Date(lessonTimes[a]);
       const currTimeObj = new Date(time);
       return currTimeObj < t ? getTimeUntil(currTimeObj, t) : '--:--:--';
     }
   }
-  console.log(showReportCard());
-  const [showingReportCard, setShowingReportCard] = useState(showReportCard());
-  const answerOptions = getAnswerOptions(allAnswers, currQ);
 
-  return (
-      <div className='UserPage'>
-        <Head>
-          <title> Welcome to School University </title>
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
-        <div className='header'>
-          <img onClick={reload} src='/img/logo-horizontal.png' alt='School University' />
-          <h5 onClick={() => setShowingReportCard(!showingReportCard)}> InstaSCAN&trade; </h5>
-        </div>
+  getAnswerOptions = (allAnswers, currQ) => {
+    const { day, lesson } = currQ;
+    const todaysAnswers = allAnswers.filter(answer => {
+      return answer.day === day && answer.lessonNumberIndex == lesson;
+    });
+    return todaysAnswers.filter((a, i) => todaysAnswers.indexOf(a) === i)
+  }
 
-        { showingReportCard && (
-          <ReportCard dailyQuestions={dailyQuestions[0].fields} today={DAY_INDEX} nextTime={getNextTime()} scoreData={scoreData} />
-        )}
+  setCurrQ = q => {
+    this.setState({
+      currQ: q,
+    });
+  }
 
-        { !showingReportCard && (
-          <div>
-            <StatusBar day='02' lesson={currQ.lesson} topic={currQ.topic} />
-            <div className="body">
-              { currQ.lesson != '--' && (
-                <Question time={time} currQ={currQ} username={username} answerOptions={answerOptions} />
-              )}
-              { currQ.lesson === '--' && (
-                <ExamProgress time={time} scoreData={scoreData} setQuestion={setCurrQ} dailyQuestions={dailyQuestions[0].fields} />
-              )}
-            </div>
+  render() {
+    const { lessonTimes, dailyQuestions, allAnswers } = this.props.store.contentfulStore;
+    const { scoreData } = this.props.store.firebaseStore;
+    const { time, router, user } = this.props;
+    const { showingReportCard, currQ, dataLoaded } = this.state;
+    const reload = () => window.location.reload();
+    const answerOptions = this.getAnswerOptions(allAnswers, currQ);
+    console.log(scoreData);
+    return dataLoaded ? (
+        <div className='UserPage'>
+          <Head>
+            <title> Welcome to School University </title>
+            <link rel="icon" href="/favicon.ico" />
+          </Head>
+          <div className='header'>
+            <img onClick={reload} src='/img/logo-horizontal.png' alt='School University' />
+            <h5 onClick={() => this.setState({ showingReportCard: !showingReportCard})}> InstaSCAN&trade; </h5>
           </div>
-        )}
 
-        <p className='timer'> {'Next Question: ' + getNextTime()}</p>
-        <p className='id'> S@: {username} </p>
+          { showingReportCard && (
+            <ReportCard dailyQuestions={dailyQuestions[0].fields} today={DAY_INDEX} nextTime={this.getNextTime()} scoreData={scoreData} />
+          )}
 
-        <style jsx>{`
+          { !showingReportCard && (
+            <div>
+              <StatusBar day='02' lesson={currQ.lesson} topic={currQ.topic} />
+              <div className="body">
+                { currQ.lesson != '--' && (
+                  <Question time={time} currQ={currQ} user={user} answerOptions={answerOptions} />
+                )}
+                { currQ.lesson === '--' && (
+                  <ExamProgress time={time} scoreData={scoreData} setQuestion={this.setCurrQ} dailyQuestions={dailyQuestions[0].fields} />
+                )}
+              </div>
+            </div>
+          )}
 
-          .UserPage {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            min-height: calc(100vh - 50px);
-          }
+          <p className='timer'> {'Next Question: ' + this.getNextTime()}</p>
+          <p className='id'> S@: {user} </p>
+          <style jsx>{`
 
-          .header {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: ${Sizing.lg};
-          }
+            .UserPage {
+              display: flex;
+              flex-direction: column;
+              height: 100%;
+              min-height: calc(100vh - 50px);
+            }
 
-          .header img {
-            position: relative;
-            left: -3px;
-            width: 50%;
-          }
+            .header {
+              width: 100%;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: ${Sizing.lg};
+            }
 
-          .header h5 {
-            font-weight: bold;
-            color: ${getCategoryColor(currQ.topic)};
-            font-family: 'Arial';
-          }
+            .header img {
+              position: relative;
+              left: -3px;
+              width: 50%;
+            }
 
-          .timer {
-            margin-top: ${Sizing.xl};
-          }
+            .header h5 {
+              font-weight: bold;
+              color: ${getCategoryColor(currQ.topic)};
+              font-family: 'Arial';
+            }
 
-          .timer, .id {
-            text-align: center;
-          }
-        `}</style>
-      </div>
-  );
+            .timer {
+              margin-top: ${Sizing.xl};
+            }
+
+            .timer, .id {
+              text-align: center;
+            }
+          `}</style>
+        </div>
+    ) : <h1> Loading ... </h1>;
+  }
 }
 
-export default withRouter(UserPage);
+export default withRouter(Page);

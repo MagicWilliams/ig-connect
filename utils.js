@@ -82,37 +82,9 @@ export function getTodaysScore(today, answers) {
   return (correctAnswers / 8) * 100;
 }
 
-
-export async function getScoreData(username) {
+export async function postAnswer(answerData, user) {
   var database = firebase.database();
-  const formattedUser = username.replace(".", "_");
-  var userRef = firebase.database().ref('/users/' + formattedUser);
-  let data;
-
-  userRef.on("value", function(snapshot) {
-    if (snapshot.val() === null) {
-      const setData = {
-        username: username,
-        answers: [],
-        totalScore: 0,
-      }
-
-      userRef.set(setData);
-      console.log(snapshot.val());
-      data = setData;
-    } else {
-      data = snapshot.val();
-    }
-  }, function (errorObject) {
-    console.log("The read failed: " + errorObject.code);
-  });
-
-  return data;
-}
-
-export async function postAnswer(answerData) {
-  var database = firebase.database();
-  const formattedUser = answerData.username.replace(".", "_");
+  const formattedUser = answerData.user.replace(".", "_");
   var userRef = database.ref('/users/' + formattedUser);
   let newPostKey = userRef.child('answers').push().key;
   var updates = {};

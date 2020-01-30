@@ -8,6 +8,9 @@ const ExamProgress = props => {
 
   const allQuestions = getQs(props.dailyQuestions);
   const answerSubmitted = (day, lesson) => {
+    if (!props.scoreData) {
+      return true;
+    }
     const { answers } = props.scoreData;
     for (var key in answers) {
       const { day, lessonNumberIndex } = answers[key].answerData;

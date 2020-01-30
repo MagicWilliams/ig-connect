@@ -3,6 +3,10 @@ import { Sizing, Colors } from '../style-vars';
 import { getAnswersByDay, getTodaysScore, getCategoryColor, getQs } from '../utils';
 
 const ReportCard = props => {
+  if (!props.scoreData) {
+    return null;
+  }
+
   const { answers } = props.scoreData;
   const { today } = props;
   getTodaysScore(2, answers);

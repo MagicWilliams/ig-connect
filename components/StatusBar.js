@@ -23,15 +23,15 @@ const StatusBar = props => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border-top: 1px solid ${getCategoryColor(color)};
-          border-bottom: 1px solid ${getCategoryColor(color)};
-          border-right: 1px solid ${getCategoryColor(color)};
+          border-top: 1px solid ${getCategoryColor(props.topic)};
+          border-bottom: 1px solid ${getCategoryColor(props.topic)};
+          border-right: 1px solid ${getCategoryColor(props.topic)};
           margin: ${Sizing.xl} 0px;
-          color: ${getCategoryColor(color)};
+          color: ${getCategoryColor(props.topic)};
         }
 
         .StatusBar div {
-          border-left: 1px solid ${getCategoryColor(color)};
+          border-left: 1px solid ${getCategoryColor(props.topic)};
           text-align: center;
         }
 
@@ -40,7 +40,7 @@ const StatusBar = props => {
         }
 
         .topic {
-          background: ${props.topic === '--' ? 'transparent' : getCategoryColor(color)};
+          background: ${props.topic === '--' ? 'transparent' : getCategoryColor(props.topic)};
           color: ${props.topic === '--' ? 'black' : 'white'};
         }
 
