@@ -1,0 +1,8 @@
+{
+  "build": {
+    "env": {
+      "SU_CONTENTFUL_SPACE_ID": "@su_contentful_space_id",
+      "SU_CONTENTFUL_API_TOKEN": "@su_contentful_api_token"
+    }
+  }
+}

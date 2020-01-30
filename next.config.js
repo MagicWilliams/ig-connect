@@ -8,8 +8,8 @@ module.exports = withSass(withFonts({
   env: {
     APP_ID: process.env.APP_ID,
     APP_SECRET: process.env.APP_SECRET,
-    CONTENTFUL_API_TOKEN: process.env.CONTENTFUL_API_TOKEN,
-    CONTENTFUL_SPACE_ID: process.env.CONTENTFUL_SPACE_ID,
+    SU_CONTENTFUL_API_TOKEN: process.env.SU_CONTENTFUL_API_TOKEN,
+    SU_CONTENTFUL_SPACE_ID: process.env.SU_CONTENTFUL_SPACE_ID,
     GOOGLE_APPLICATION_CREDENTIALS: process.env.GOOGLE_APPLICATION_CREDENTIALS
   },
   webpack: (config) => {
