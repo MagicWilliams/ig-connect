@@ -11,11 +11,11 @@ const ReportCard = props => {
     <div className='ReportCard'>
       <h1> Report Card </h1>
       <div className='ReportCard-body'>
-        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={1} score={getTodaysScore(1, answers)}/>
-        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={2} score={getTodaysScore(2, answers)}/>
-        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={3} score={getTodaysScore(3, answers)}/>
-        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={4} score={getTodaysScore(4, answers)}/>
-        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={5} score={getTodaysScore(5, answers)}/>
+        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={1} />
+        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={2} />
+        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={3} />
+        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={4} />
+        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={5} />
       </div>
       <style jsx> {`
         .ReportCard h1 {
@@ -40,8 +40,9 @@ const ReportCard = props => {
 
 const DayCell = props => {
   const { today, day, answers, allQuestions } = props;
+  const score = getTodaysScore(day, answers);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const rankText = props.score === '--' || today < day ? '--/--' : 'Calculating...';
+  const rankText = score === '--' || today < day ? '--/--' : 'Calculating...';
   const processAnswers = answers => {
     let trueAnswers = [];
     for (var a in answers) {
@@ -84,7 +85,7 @@ const DayCell = props => {
         </div>
         <div className='right'>
           <p> -- </p>
-          <p> {"Grade: " + props.score + "%"} </p>
+          <p> {"Grade: " + score + "%"} </p>
         </div>
       </div>
       { drawerOpen && (
