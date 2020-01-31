@@ -72,8 +72,7 @@ class UserPage extends React.Component {
 
     const { fetchQuestions, dailyQuestions, allAnswers, lessonTimes } = this.props.store.contentfulStore;
     const { fetchScoreData, scoreData } = this.props.store.firebaseStore;
-    await Promise.all([fetchScoreData(this.props.user), fetchQuestions()]).then((values) => {
-      console.log('RESULTS \n\n\n', scoreData);
+    await Promise.all([fetchScoreData(this.props.user), fetchQuestions(DAY_INDEX)]).then((values) => {
       this.setState({
         scoreData: scoreData,
         dataLoaded: true,
@@ -101,6 +100,13 @@ class UserPage extends React.Component {
 
   getNextTime = () => {
     const { lessonTimes } = this.props.store.contentfulStore;
+
+    const sortedTimes = lessonTimes.sort((a, b) => {
+      const dateA = new Date(a);
+      const dateB = new Date(b);
+      return a > b;
+    })
+
     const { time } = this.props;
     for (var a = 0; a < lessonTimes.length; a++) {
       const t = new Date(lessonTimes[a]);
@@ -112,9 +118,17 @@ class UserPage extends React.Component {
   getAnswerOptions = (allAnswers, currQ) => {
     const { day, lesson } = currQ;
     const todaysAnswers = allAnswers.filter(answer => {
-      return answer.day === day && answer.lessonNumberIndex == lesson;
+      return answer.fields.day === day && answer.fields.lessonNumberIndex == lesson;
     });
-    return todaysAnswers.filter((a, i) => todaysAnswers.indexOf(a) === i)
+    const trueAnswers = [];
+    for (var a = 0; a < todaysAnswers.length; a++) {
+      const { text } = todaysAnswers[a].fields;
+      if (trueAnswers.indexOf(todaysAnswers[a]) === -1) {
+        trueAnswers.push(todaysAnswers[a]);
+      }
+    }
+
+    return trueAnswers.filter((a, i) => todaysAnswers.indexOf(a) === i)
   }
 
   setCurrQ = q => {
@@ -133,7 +147,6 @@ class UserPage extends React.Component {
       const { time, router, user } = this.props;
       const reload = () => window.location.reload();
       const answerOptions = this.getAnswerOptions(allAnswers, currQ);
-      console.log(scoreData);
 
       return (
           <div className='UserPage'>
@@ -152,13 +165,13 @@ class UserPage extends React.Component {
 
             { !showingReportCard && (
               <div>
-                <StatusBar day='02' lesson={currQ.lesson} topic={currQ.topic} />
+                <StatusBar day={DAY_INDEX} lesson={currQ.lesson} topic={currQ.topic} />
                 <div className="body">
                   { currQ.lesson != '--' && (
                     <Question time={time} currQ={currQ} user={user} answerOptions={answerOptions} />
                   )}
                   { currQ.lesson === '--' && (
-                    <ExamProgress time={time} scoreData={scoreData} setQuestion={this.setCurrQ} dailyQuestions={dailyQuestions[0].fields} />
+                    <ExamProgress today={DAY_INDEX} time={time} scoreData={scoreData} setQuestion={this.setCurrQ} dailyQuestions={dailyQuestions.fields} />
                   )}
                 </div>
               </div>

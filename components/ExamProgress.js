@@ -3,11 +3,12 @@ import { getCategoryColor } from '../utils';
 import { getTodaysScore, getTimeUntil, getQs } from '../utils';
 
 const ExamProgress = props => {
-
-  console.log(props)
-  const DAY_INDEX = 2;
+  const DAY_INDEX = props.today;
   const allQuestions = getQs(props.dailyQuestions);
   const answerSubmitted = (day, lesson) => {
+    if (!props.scoreData) {
+      return false;
+    }
     const { answers } = props.scoreData;
     for (var key in answers) {
       const { day, lessonNumberIndex } = answers[key].answerData;
@@ -21,7 +22,6 @@ const ExamProgress = props => {
   const getStatus = currQ => {
     const { lesson, lessonTime } = currQ.fields;
     const { time } = props;
-
     const currTime = new Date(time);
     const questionTime = new Date(lessonTime);
     const isBefore = currTime < questionTime;
