@@ -8,7 +8,7 @@ const Question = props => {
   const answerSelected = selection !== '';
   const { answerOptions, user } = props;
   const filtered = answerOptions.filter((a, i) => answerOptions.indexOf(a) === i);
-  console.log(filtered);
+
   const { topic, lesson, questionText } = props.currQ;
   const color = getCategoryColor(topic);
   const letterOptions = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
