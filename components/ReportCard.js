@@ -11,6 +11,7 @@ const ReportCard = props => {
   const { today } = props;
   getTodaysScore(2, answers);
   const allQuestions = getQs(props.dailyQuestions);
+  console.log(props.scoreData);
   return (
     <div className='ReportCard'>
       <h1> Report Card </h1>

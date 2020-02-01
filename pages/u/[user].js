@@ -14,7 +14,7 @@ import { Provider } from 'mobx-react';
 import RootStore from '../../stores/RootStore';
 import {inject, observer} from 'mobx-react';
 
-const DAY_INDEX = 3;
+const DAY_INDEX = 2;
 const checkForCode = url => {
     console.log(url.substring(0, 6))
     if (url.substring(0, 6) === '?code=') {

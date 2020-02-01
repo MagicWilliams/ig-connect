@@ -7,8 +7,9 @@ const Question = props => {
   const [ selection, setSelection ] = useState('');
   const answerSelected = selection !== '';
   const { answerOptions, user } = props;
-  const filtered = answerOptions.filter((a, i) => answerOptions.indexOf(a) === i);
-
+  const filtered = answerOptions.filter((a, i) => answerOptions.indexOf(a) === i)
+  filtered.splice(4, filtered.length-4);
+  console.log(filtered);
   const { topic, lesson, questionText } = props.currQ;
   const color = getCategoryColor(topic);
   const letterOptions = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -45,7 +46,7 @@ const Question = props => {
               return (
                 <div className='choice'>
                   <div className='letter'> {getLetterOption(i)} </div>
-                  <div className='option'> {answer.text} </div>
+                  <div className='option'> {answer.fields.text} </div>
                 </div>
               )
             })}
