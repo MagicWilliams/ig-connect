@@ -5,6 +5,8 @@ import { withRouter } from 'next/router'
 import { Sizing, Colors } from '../style-vars';
 import firebase from '../firebase';
 import * as firebaseMod from 'firebase/app';
+import * as Sentry from '@sentry/browser';
+Sentry.init({dsn: "https://0c316e9db8cb4826bb1417cb241a87bb@sentry.io/2139101"});
 require('firebase/auth');
 
 class Home extends React.Component {
@@ -28,37 +30,39 @@ class Home extends React.Component {
     });
   }
 
+  onSignInSubmit = () => {
+    const { phoneNumber } = this.state;
+    const formattedNum = '+1'+phoneNumber;
+    var appVerifier = window.recaptchaVerifier;
+    let confirmPhone;
+    const processPhone = () => {
+      Sentry.captureException('PROCESSING PHONE');
+      this.setState({ verifyPhone: true });
+    }
+    firebase.auth().signInWithPhoneNumber(formattedNum, appVerifier)
+    .then(function (confirmationResult) {
+      processPhone();
+      // SMS sent. Prompt user to type the code from the message, then sign the
+      window.confirmationResult = confirmationResult;
+    }).catch(function (error) {
+      Sentry.captureException(error);
+    });
+  }
+
+  verify = async () => {
+    const { verificationCode } = this.state;
+    await confirmationResult.confirm(verificationCode).then(function (result) {
+      const { uid, phoneNumber } = result.user;
+      window.location.href = '/u/' + phoneNumber;
+    }).catch(function (error) {
+      Sentry.captureException(error);
+      console.log('User couldn\'t sign in (bad verification code?)');
+    });
+  }
+
   render() {
     const login = () => {
       console.log(phoneNumber);
-    }
-
-    const onSignInSubmit = () => {
-      const { phoneNumber } = this.state;
-      const formattedNum = '+1'+phoneNumber;
-      var appVerifier = window.recaptchaVerifier;
-      let confirmPhone;
-      const processPhone = () => this.setState({ verifyPhone: true });
-
-      firebase.auth().signInWithPhoneNumber(formattedNum, appVerifier)
-      .then(function (confirmationResult) {
-        processPhone()
-        // SMS sent. Prompt user to type the code from the message, then sign the
-        window.confirmationResult = confirmationResult;
-      }).catch(function (error) {
-        console.log(error);
-      });
-    }
-
-    const verify = () => {
-      const { verificationCode } = this.state;
-      confirmationResult.confirm(verificationCode).then(function (result) {
-        const { uid, phoneNumber } = result.user;
-        console.log(uid, phoneNumber);
-        wondow.location.href = '/u/' + phoneNumber;
-      }).catch(function (error) {
-        console.log('User couldn\'t sign in (bad verification code?)');
-      });
     }
 
     const { verifyPhone } = this.state;
@@ -76,8 +80,8 @@ class Home extends React.Component {
               <h1> Welcome </h1>
               <p className='intro-1'> School University is a free online degree program that operates through Instagram. Students will receive 8 lessons per day with 8 corresponding tests as well as one pop quiz. Top students are eligible to win up to $100 cash each day. These scholarships are paid at the end of the day through Venmo. </p>
               <p className='intro-2'> To enroll we need to access your Instagram account. </p>
-              <input placeholder='Enter phone number' className='input' onChange={(e) => this.setState({phoneNumber: e.target.value})}type='tel' />
-              <button id='sign-in-button' className='login' onClick={onSignInSubmit}> Grant access </button>
+              <input placeholder='Enter phone number' className='input' onChange={(e) => this.setState({phoneNumber: e.target.value})}type='text' />
+              <button id='sign-in-button' className='login' onClick={this.onSignInSubmit}> Grant access </button>
               <p className='disclaimer'> * School University is not an accredited educational facility, yet ‾\_(ツ)_/‾ </p>
               <img src='/img/logo-horizontal.png' className='logo' alt='School University' />
             </>
@@ -86,7 +90,7 @@ class Home extends React.Component {
             <>
               <h1> Verify Your Phone Number </h1>
               <input placeholder='Enter verification code' className='verification' onChange={(e) => this.setState({verificationCode: e.target.value})} type='text' />
-              <button id='sign-in-button' className='confirm' onClick={verify}> Verify phone </button>
+              <button id='sign-in-button' className='confirm' onClick={this.verify}> Verify phone </button>
             </>
           )}
         </div>
