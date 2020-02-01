@@ -55,7 +55,7 @@ const DayCell = props => {
     return trueAnswers;
   }
 
-  const checkAnswers = day => {
+  const checkAnswers = today => {
     const trueAnswers = processAnswers(answers);
     console.log(trueAnswers);
     const results = [];
@@ -65,8 +65,8 @@ const DayCell = props => {
     }
 
     for (var a = 0; a < trueAnswers.length; a++) {
-      const { correct, lessonNumberIndex } = trueAnswers[a].fields;
-      if (correct) {
+      const { correct, lessonNumberIndex, day } = trueAnswers[a].fields;
+      if (correct && day === today) {
         const i = lessonNumberIndex - 1;
         results[i] = true;
       }
@@ -99,8 +99,8 @@ const DayCell = props => {
 
           const currQ = allQuestions[i];
           const { lesson, topic, day } = currQ.fields;
-          const results = checkAnswers(day);
-          console.log(results);
+          const results = checkAnswers(props.day);
+          console.log(props.day, results);
           const backgroundStyles = {
             background: getCategoryColor(topic)
           }
