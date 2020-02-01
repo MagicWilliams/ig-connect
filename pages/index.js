@@ -134,6 +134,7 @@ class Home extends React.Component {
             margin: ${Sizing.lg} 0px;
             border: none;
             outline: none;
+            cursor: pointer;
           }
 
           .disclaimer {
