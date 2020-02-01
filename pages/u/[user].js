@@ -160,7 +160,7 @@ class UserPage extends React.Component {
             </div>
 
             { showingReportCard && (
-              <ReportCard dailyQuestions={dailyQuestions[0].fields} today={DAY_INDEX} nextTime={this.getNextTime()} scoreData={scoreData} />
+              <ReportCard dailyQuestions={dailyQuestions.fields} today={DAY_INDEX} nextTime={this.getNextTime()} scoreData={scoreData} />
             )}
 
             { !showingReportCard && (
