@@ -78,7 +78,7 @@ export function getTodaysScore(today, answers) {
   }
 
   for (var a = 0; a < todaysAnswers.length; a++) {
-    if (todaysAnswers[a].correct) {
+    if (todaysAnswers[a].fields.correct) {
       correctAnswers++;
     }
   }
