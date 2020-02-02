@@ -44,8 +44,6 @@ class ContentfulStore {
 						todaysAnswers.push(this.allAnswers[a]);
 					}
 				}
-				console.log(todaysAnswers);
-
 			})
 		]);
 	}

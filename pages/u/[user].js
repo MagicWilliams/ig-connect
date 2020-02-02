@@ -71,8 +71,8 @@ class UserPage extends React.Component {
     });
 
     const { fetchQuestions, dailyQuestions, allAnswers, lessonTimes } = this.props.store.contentfulStore;
-    const { fetchScoreData, scoreData } = this.props.store.firebaseStore;
-    await Promise.all([fetchScoreData(this.props.user), fetchQuestions(DAY_INDEX)]).then((values) => {
+    const { fetchScoreData, scoreData, fetchAllUserScores, allUserScores } = this.props.store.firebaseStore;
+    await Promise.all([fetchScoreData(this.props.user), fetchQuestions(DAY_INDEX), fetchAllUserScores()]).then((values) => {
       this.setState({
         scoreData: scoreData,
         dataLoaded: true,
@@ -100,11 +100,10 @@ class UserPage extends React.Component {
 
   getNextTime = () => {
     const { lessonTimes } = this.props.store.contentfulStore;
-
     const sortedTimes = lessonTimes.sort((a, b) => {
       const dateA = new Date(a);
       const dateB = new Date(b);
-      return a > b;
+      return dateA > dateB;
     })
 
     const { time } = this.props;
@@ -138,6 +137,7 @@ class UserPage extends React.Component {
   }
 
   render() {
+    const { allUserScores } = this.props.store.firebaseStore;
     const { showingReportCard, currQ, dataLoaded } = this.state;
     if (!dataLoaded) {
       return null;
@@ -160,7 +160,7 @@ class UserPage extends React.Component {
             </div>
 
             { showingReportCard && (
-              <ReportCard dailyQuestions={dailyQuestions.fields} today={DAY_INDEX} nextTime={this.getNextTime()} scoreData={scoreData} />
+              <ReportCard allUserScores={allUserScores} dailyQuestions={dailyQuestions.fields} today={DAY_INDEX} nextTime={this.getNextTime()} scoreData={scoreData} />
             )}
 
             { !showingReportCard && (

@@ -9,17 +9,16 @@ const ReportCard = props => {
 
   const { answers } = props.scoreData;
   const { today } = props;
-  getTodaysScore(2, answers);
   const allQuestions = getQs(props.dailyQuestions);
   return (
     <div className='ReportCard'>
       <h1> Report Card </h1>
       <div className='ReportCard-body'>
-        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={1} />
-        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={2} />
-        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={3} />
-        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={4} />
-        <DayCell allQuestions={allQuestions} answers={answers} today={today} day={5} />
+        <DayCell allQuestions={allQuestions} scores={props.allUserScores} answers={answers} today={today} day={1} />
+        <DayCell allQuestions={allQuestions} scores={props.allUserScores} answers={answers} today={today} day={2} />
+        <DayCell allQuestions={allQuestions} scores={props.allUserScores} answers={answers} today={today} day={3} />
+        <DayCell allQuestions={allQuestions} scores={props.allUserScores} answers={answers} today={today} day={4} />
+        <DayCell allQuestions={allQuestions} scores={props.allUserScores} answers={answers} today={today} day={5} />
       </div>
       <style jsx> {`
         .ReportCard h1 {
@@ -43,10 +42,6 @@ const ReportCard = props => {
 }
 
 const DayCell = props => {
-  const { today, day, answers, allQuestions } = props;
-  const score = getTodaysScore(day, answers);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const rankText = score === '--' || today < day ? '--/--' : 'Calculating...';
   const processAnswers = answers => {
     let trueAnswers = [];
     for (var a in answers) {
@@ -55,11 +50,51 @@ const DayCell = props => {
     return trueAnswers;
   }
 
+  const getRankPosition = (day, scores) => {
+    const sortedScores = scores.sort((a, b) => {
+      return b.score - a.score;
+    })
+
+    for (var a = 0; a < sortedScores.length; a++) {
+      if (sortedScores[a].score === getTodaysScore(day, props.answers)) {
+        return a + 1;
+      }
+    }
+  }
+
+  const getClassRank = (day) => {
+    var classSize = 0;
+    let todaysScores = [];
+    for (var a in props.scores) {
+      const { answers, username } = props.scores[a];
+      if (answers) {
+        const hashes = Object.keys(answers);
+        const newScore = {
+          username,
+          score: getTodaysScore(day, answers),
+        }
+        if (newScore.score === '--') {
+          newScore.score = 0;
+        }
+        todaysScores.push(newScore);
+        for (var a = 0; a < hashes.length; a++) {
+          if (answers[hashes[a]] && answers[hashes[a]].answerData.fields.day === day) {
+            classSize++;
+          }
+        }
+      }
+    }
+
+    return {
+      position: getRankPosition(day, todaysScores),
+      size: classSize,
+    }
+  }
+
+
   const checkAnswers = today => {
     const trueAnswers = processAnswers(answers);
-    console.log(trueAnswers);
     const results = [];
-
     for (var a = 0; a < allQuestions.length; a++) {
       results.push(false);
     }
@@ -71,15 +106,21 @@ const DayCell = props => {
         results[i] = true;
       }
     }
-
     return results;
   }
 
   const handleOpening = () => {
-    if (props.today >= props.day) {
+    const { day, today } = props;
+    if (today >= day) {
       setDrawerOpen(!drawerOpen)
     }
   }
+
+  const { today, day, answers, allQuestions } = props;
+  const score = getTodaysScore(day, answers);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const { position, size } = getClassRank(day);
+  const rankText = score === '--' || today < day ? '--/--' : position + '/' + size;
 
   return (
     <div className='DayCell'>
@@ -100,7 +141,6 @@ const DayCell = props => {
           const currQ = allQuestions[i];
           const { lesson, topic, day } = currQ.fields;
           const results = checkAnswers(props.day);
-          console.log(props.day, results);
           const backgroundStyles = {
             background: getCategoryColor(topic)
           }

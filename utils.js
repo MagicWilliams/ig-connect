@@ -60,19 +60,16 @@ export function getAnswersByDay(dayIndex, answers) {
   const hashes = Object.keys(answers);
   for (var a = 0; a < hashes.length; a++) {
     const { answerData } = answers[hashes[a]];
-    console.log(answerData);
     if (answerData.fields.day === dayIndex) {
       todaysAnswers.push(answerData);
     }
   }
-  console.log(todaysAnswers);
   return todaysAnswers
 }
 
 export function getTodaysScore(today, answers) {
   var correctAnswers = 0;
   const todaysAnswers = getAnswersByDay(today, answers);
-  console.log(todaysAnswers);
   if (todaysAnswers.length === 0) {
     return '--'
   }
@@ -82,7 +79,6 @@ export function getTodaysScore(today, answers) {
       correctAnswers++;
     }
   }
-  console.log((correctAnswers / 8) * 100);
   return (correctAnswers / 8) * 100;
 }
 

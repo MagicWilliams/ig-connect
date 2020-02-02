@@ -6,7 +6,28 @@ class FirebaseStore {
 		this.rootStore = _rootStore;
 	}
 
+	@observable allUserScores;
 	@observable scoreData;
+
+	@action.bound
+  async fetchAllUserScores() {
+		var database = firebase.database();
+	  var userRef = firebase.database().ref('/users');
+		let res;
+		let userScores = [];
+
+	  userRef.once("value", function(snapshot) {
+			res = snapshot.val();
+	  }, function (errorObject) {
+	    console.log("The read failed: " + errorObject.code);
+	  }).then(() => {
+			const hashes  = Object.keys(res);
+			for (var a = 0; a < hashes.length; a++) {
+				userScores.push(res[hashes[a]])
+			}
+			this.allUserScores = userScores;
+		});
+	}
 
   @action.bound
   async fetchScoreData(username) {

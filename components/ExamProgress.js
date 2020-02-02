@@ -12,7 +12,6 @@ const ExamProgress = props => {
       const { answers } = props.scoreData;
       for (var key in answers) {
         const { day, lessonNumberIndex } = answers[key].answerData.fields;
-        console.log(key, answers[key], day, lessonNumberIndex);
         if (day === DAY_INDEX && lessonNumberIndex === lesson) {
           return true; // Answer already submitted
         }
